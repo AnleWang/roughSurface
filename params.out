@@ -1,0 +1,17 @@
+1		# lengthX
+1		# lengthY
+512		# nx
+512		# ny
+4711		# randSeed
+0.0078		# lambdaShort
+0.5		# lambdaRoll
+0.8		# Hurst
+0.1		# stepHeight
+0		# dumpStep
+1		# dumpSpecSmooth
+0		# dumpSpecStep
+0		# dumpACF
+0.0191604	# rmsHeight Fourier
+1		# rmsGrad Fourier
+376.061		# rmsCurv Fourier
+0.117701	# absolute height

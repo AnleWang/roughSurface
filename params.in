@@ -1,0 +1,13 @@
+1		# lengthX
+1		# lengthY
+512		# nx
+512		# ny
+4711		# randSeed
+0.0078  	# lambdaShort
+0.5		# lambdaRoll
+0.8		# Hurst
+0.1		# stepHeight
+0		# dumpStep
+1		# dumpSpecSmooth
+0		# dumpSpecStep
+0		# dumpACF
