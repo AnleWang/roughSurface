@@ -10,4 +10,4 @@
 0		# dumpStep
 1		# dumpSpecSmooth
 0		# dumpSpecStep
-0		# dumpACF
+1		# dumpACF

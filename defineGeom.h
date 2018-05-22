@@ -7,6 +7,7 @@
 #include <fftw3.h>
 #include <algorithm>
 #include <cstring>
+#include <vector>
 
 using namespace std;
 
@@ -54,3 +55,5 @@ void addFractal();
 double sqrtSpec(double, double);
 void continuumAnalysis(double*, double*,double*);
 void dumpFractal();
+void dumpSpectra();
+void dumpHHACF();

@@ -4,6 +4,10 @@ int main(){
   initParams();
   addFractal();
   dumpFractal();
+  if (dumpSpecSmooth) 
+    dumpSpectra();
+  if (dumpACF)
+    dumpHHACF();
 }
 
 void initParams(){
@@ -192,8 +196,8 @@ double getQ(Lint k){
 }
 
 double sqrtSpec(double qRed, double Hurst){
-  double y = pow( 1./sqrt(1.+qRed*qRed) , 1+Hurst);
-  //double y = pow(qRed, 1+Hurst);
+  //double y = pow( 1./sqrt(1.+qRed*qRed) , 1+Hurst);
+  double y = pow(1./qRed, 1+Hurst);
   return(y);
 }
 
@@ -233,10 +237,154 @@ void dumpFractal(){
     } dumP << endl;
   } dumP.close();
   
-  ofstream dumpExp("exp.dat");
-    
-
+  ofstream dumpExp("exp.dat"); 
+  dumpExp << nx << endl;
+  dumpExp << ny << endl;
+  dumpExp << dx << endl;
+  dumpExp << 5.0 << endl;
+  
+  for (Lint ix = 0; ix < nx; ++ix){
+    for (Lint iy = 0; iy < ny; ++iy){
+      Lint k = getLinRIndex(ix%nx, iy%ny);
+      dumpExp << equilPos[k] << endl;
+    }
+    dumpExp << endl;
+  }
   dumpExp.close();
 
 }
 
+void dumpSpectra(){
+  //calculate the height-height-ACF
+  vector<vector<double> > equilPos3;
+  equilPos3.resize(nx);
+  for (ptrdiff_t ix = 0; ix < nx; ix++){equilPos3[ix].resize(ny);}
+
+  for (ptrdiff_t ix = 0; ix < nx; ++ix){
+      for (ptrdiff_t iy = 0; iy < ny; ++iy){
+        ptrdiff_t k = getLinRIndex(ix,iy);
+        equilPos3[ix][iy] = equilPos[k];
+      }
+  }
+
+    double selfACF[nx];
+    for (int ix = 0; ix < nx; ix++){selfACF[ix] = 0.;}
+
+    ofstream outSelfACF("selfACF.dat");
+    int nWidth = nx;
+    for (ptrdiff_t iWidth = 0; iWidth < nWidth; ++iWidth){
+      double deltaR = dx*iWidth;
+      int neighN = iWidth;
+      for (ptrdiff_t ix = 0; ix < nx; ++ix){
+        for (ptrdiff_t iy = 0; iy < ny; ++iy){
+          int jxR = (ix+neighN+nx)%nx;
+          int jyT = (iy+neighN+ny)%ny;
+          double rDummyR = equilPos3[ix][iy]*equilPos3[jxR][iy];
+          double rDummyT = equilPos3[ix][iy]*equilPos3[ix][jyT];
+          selfACF[iWidth] += rDummyR+rDummyT;
+        }
+      }
+         selfACF[iWidth] /= 2.*nx*ny;
+         outSelfACF << deltaR << "\t" << selfACF[iWidth] << endl;
+    }
+     outSelfACF.close();
+
+     int nR = nWidth;
+     //fourier transform
+     fftw_complex *in, *out;
+     fftw_plan planForward;
+
+     in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex)*nR);
+     out= (fftw_complex*) fftw_malloc(sizeof(fftw_complex)*nR);
+
+     for (int iR = 0; iR < nR; ++iR){
+       in[iR][0] = selfACF[iR];
+       in[iR][1] = 0.;
+     }
+
+     planForward = fftw_plan_dft_1d(nR,in, out,FFTW_FORWARD,FFTW_ESTIMATE);
+     fftw_execute(planForward);
+
+     vector<complex<double> > fourierPos;
+     fourierPos.resize(nR);
+
+     for (int qx = 0; qx < nR; qx++){
+       fourierPos[qx].real(out[qx][0]);
+       fourierPos[qx].imag(out[qx][1]);
+     }
+
+     fftw_destroy_plan(planForward) ;
+     fftw_free(in);
+     fftw_free(out);
+
+     ofstream outSpectrum("spectrum.dat");
+     for (int qx = 0; qx < nR; qx++){
+       outSpectrum << qx*2.*PI/nx << "\t" << real(fourierPos[qx])*PI/double(qx) << endl;
+     }
+     outSpectrum.close();
+}
+
+void dumpHHACF(){
+  vector<vector <double> > equilRealPos;
+  equilRealPos.resize(nx);
+  for (Lint ix = 0; ix < nx; ++ix){equilRealPos[ix].resize(ny);}
+  for (Lint ix = 0; ix < nx; ++ix){
+    for (Lint iy = 0; iy < ny; ++iy){
+      Lint k = getLinRIndex(ix,iy);
+      equilRealPos[ix][iy] = equilPos[k];
+    }
+  }
+
+  double corrReal[nx/2];
+
+  //calculate the height-difference-autocorrelation function
+  int dR = 0;
+  int iT = 0;
+  double ddR = 1.2;
+  int idR = (int) ddR;
+  while ((dR+idR) <= nx/2){
+    for (int iX = 0; iX < nx; ++iX){
+      double rD1 = 0;
+      for (int iY = 0; iY < ny; ++iY){
+        //draw random angle
+	int nSample = 2;
+	for (int iSample = 0; iSample < nSample; ++iSample){
+	  double randAngle = 2.*PI*rand()*1.0/RAND_MAX;
+	  double rDX = dR*cos(randAngle) + rand()*1.0/RAND_MAX;
+          double rDY = dR*sin(randAngle) + rand()*1.0/RAND_MAX;
+           
+          int jX = ((int)(iX+rDX)+2*nx) % nx;
+          int jY = ((int)(iY+rDY)+2*ny) % ny;
+	  
+	  double dHeight = equilRealPos[iX][iY] - equilRealPos[jX][jY];
+	  rD1 += dHeight * dHeight / nSample;
+	}
+      }
+      corrReal[iT] += rD1;
+    }
+  corrReal[iT] /= (nx*2.*ny);
+
+  iT += 1;
+  dR += idR;
+  ddR *= 1.2;
+  idR = ddR;
+  }
+  
+  //dump out the correlation of real surface
+  ofstream corr("corr.Real.dat");
+  double slope = 1, curvature = 1;
+  dR = 0;
+  iT = 0;
+  ddR = 1.2;
+  idR = (int) ddR;
+  while ((dR+idR) <= nx/2){
+    double dxTrue = idR * dx;
+    corr << dx*dR << "\t" << corrReal[iT] << endl;
+    iT += 1;
+    dR += idR;
+    ddR *= 1.2;
+    idR = ddR;
+  }
+  corr.close();
+
+}

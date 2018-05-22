@@ -1,5 +1,6 @@
 # roughSurface
 Code to generate randomly rough surface
+
 Anle@UniSaar, 18/05/2018
 
 1. real paramters of lambdaShort and lambdaRoll; in micros
