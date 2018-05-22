@@ -3,11 +3,16 @@
 512		# nx
 512		# ny
 4711		# randSeed
-0.0078  	# lambdaShort
+0.0078		# lambdaShort
 0.5		# lambdaRoll
 0.8		# Hurst
+0.5		# rmsValueSet
 0.1		# stepHeight
 0		# dumpStep
-1		# dumpSpecSmooth
+0		# dumpSpecSmooth
 0		# dumpSpecStep
-1		# dumpACF
+0		# dumpACF
+1	# rmsHeight Fourier
+23.7121		# rmsGrad Fourier
+8316.9		# rmsCurv Fourier
+5.30967	# absolute height

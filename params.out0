@@ -6,13 +6,12 @@
 0.0078		# lambdaShort
 0.5		# lambdaRoll
 0.8		# Hurst
-0.5		# rmsValueSet
 0.1		# stepHeight
 0		# dumpStep
 0		# dumpSpecSmooth
 0		# dumpSpecStep
 0		# dumpACF
-1	# rmsHeight Fourier
-23.7121		# rmsGrad Fourier
-8316.9		# rmsCurv Fourier
-21.2387	# absolute height
+0.0421726	# rmsHeight Fourier
+1		# rmsGrad Fourier
+350.746		# rmsCurv Fourier
+5.30967	# absolute height

@@ -19,6 +19,7 @@ void initParams(){
   //set default value of rough surface
   lambdaS = 0.01, lambdaR = 0.5, Hurst = 0.8;
   stepHeight = 0.1;
+  rmsValueSet = 1.;
 
   //output options
   dumpStep = 0; dumpSpecSmooth = 1; dumpSpecStep = 0;
@@ -40,6 +41,7 @@ void initParams(){
       else if (ROL.find("# lambdaShort")!=NIS) lambdaS = param;
       else if (ROL.find("# lambdaRoll") !=NIS) lambdaR = param;
       else if (ROL.find("# Hurst")      !=NIS) Hurst = param;
+      else if (ROL.find("# rmsValueSet")!=NIS) rmsValueSet = param;
       else if (ROL.find("# stepHeight") !=NIS) stepHeight = param;
       else if (ROL.find("# dumpStep")   !=NIS) dumpStep = param;
       else if (ROL.find("# dumpSpecSmooth")!=NIS) dumpSpecSmooth = param;
@@ -75,6 +77,7 @@ void initParams(){
   output << lambdaS     << "\t\t# lambdaShort"<< endl;
   output << lambdaR     << "\t\t# lambdaRoll"<< endl;
   output << Hurst       << "\t\t# Hurst"   << endl;
+  output << rmsValueSet << "\t\t# rmsValueSet" << endl;
   output << stepHeight  << "\t\t# stepHeight" << endl;
   output << dumpStep    << "\t\t# dumpStep" << endl;
   output << dumpSpecSmooth << "\t\t# dumpSpecSmooth" << endl;
@@ -109,8 +112,6 @@ void addFractal(){
   double*  specR = (double  *) fftw_malloc(sizeReal*sizeof(double));
   fftw_plan specF2R = 
   fftw_plan_dft_c2r_2d (nx, ny, (fftw_complex*) specF, specR,FFTW_ESTIMATE);
-  
-  //modified here: 
   
   double qRoll = TWOPI/lambdaR;
   double qMax  = TWOPI/lambdaS;
@@ -153,12 +154,20 @@ void addFractal(){
     msGrad   = msGradCont;
     msCurv   = msCurvCont;
   }
-
+ 
+ /* 
   double rmsGrad = sqrt(msGrad);
   for (Lint k = 0; k < sizeCompl; ++k){ 
     specF[k] /= rmsGrad;
-  } 
-
+  }
+  */
+   
+  double rmsHeight = sqrt(msHeight);
+  rmsHeight *= rmsValueSet*rmsValueSet; // modified here
+  for (Lint k = 0; k < sizeCompl; ++k){ 
+    specF[k] /= rmsHeight;
+  }
+  
   // transform to real space
   fftw_execute(specF2R);
 
@@ -175,9 +184,9 @@ void addFractal(){
   for (Lint k = 0; k < sizeReal; ++k) equilPos[k] += specR[k]-heightMin;
   // dump information on sheet
   ofstream output("params.out",ofstream::app);
-  output << sqrt(msHeight/msGrad) << "\t# rmsHeight Fourier\n";
-  output  << sqrt(msGrad/msGrad)   << "\t\t# rmsGrad Fourier\n";
-  output << sqrt(msCurv/msGrad)   << "\t\t# rmsCurv Fourier\n";
+  output << rmsValueSet << "\t# rmsHeight Fourier\n";
+  output  << sqrt(msGrad/msHeight)   << "\t\t# rmsGrad Fourier\n";
+  output << sqrt(msCurv/msHeight)   << "\t\t# rmsCurv Fourier\n";
   output << heightDiff << "\t# absolute height\n";
   output.close();
 

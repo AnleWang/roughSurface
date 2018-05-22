@@ -27,7 +27,7 @@ int randSeed;
 
 //variable of rough surface
 double lambdaS, lambdaR, Hurst;
-double rmsValue; //in micros
+double rmsValueSet; //in micros
 
 //variable of step profile
 double stepHeight;
